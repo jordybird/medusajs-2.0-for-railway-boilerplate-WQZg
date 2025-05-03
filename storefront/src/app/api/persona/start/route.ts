@@ -1,24 +1,24 @@
 // storefront/src/app/api/persona/start/route.ts
 import { NextRequest, NextResponse } from "next/server"
 
-export const dynamic = "force-dynamic"   // disable Next.js route caching
+export const dynamic = "force-dynamic" // disable Next.js route caching
 
-/* ========= 1.  Load required ENV vars  ========= */
+/* ========= 1. Load required ENV vars (new names) ========= */
 const {
-  PERSONA_TEMPLATE_ID,
-  PERSONA_ENV_ID,
-  PERSONA_SECRET_KEY,
+  NEXT_PUBLIC_PERSONA_VERIFICATION_TEMPLATE_ID: PERSONA_VERIFICATION_TEMPLATE_ID,
+  NEXT_PUBLIC_PERSONA_ENV_ID:                 PERSONA_ENV_ID,
+  PERSONA_SECRET_KEY,                         // server-side secret
 } = process.env
 
-if (!PERSONA_TEMPLATE_ID || !PERSONA_ENV_ID || !PERSONA_SECRET_KEY) {
-  // Fail fast at boot if any var is missing
+if (!PERSONA_VERIFICATION_TEMPLATE_ID || !PERSONA_ENV_ID || !PERSONA_SECRET_KEY) {
   throw new Error(
     "Missing Persona env vars. Check .env.local for " +
-      "PERSONA_TEMPLATE_ID, PERSONA_ENV_ID, PERSONA_SECRET_KEY."
+      "NEXT_PUBLIC_PERSONA_VERIFICATION_TEMPLATE_ID, " +
+      "NEXT_PUBLIC_PERSONA_ENV_ID, PERSONA_SECRET_KEY."
   )
 }
 
-/* ========= 2.  POST handler  ========= */
+/* ========= 2. POST handler ========= */
 export async function POST(req: NextRequest) {
   try {
     const { customerId } = await req.json()
@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    /* ---- 2a.  Create inquiry via Persona REST API ---- */
-    const r = await fetch("https://api.withpersona.com/inquiry", {
+    /* ---- 2a. Create inquiry via Persona REST API ---- */
+    const resp = await fetch("https://api.withpersona.com/inquiries", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -39,22 +39,19 @@ export async function POST(req: NextRequest) {
         "Persona-Version": "2023-01-15",
       },
       body: JSON.stringify({
-        templateId: PERSONA_TEMPLATE_ID,
-        environmentId: PERSONA_ENV_ID, // env_xxx   (sandbox)
-        referenceId: customerId,       // ties inquiry ⇆ user
+        verificationTemplateId: PERSONA_VERIFICATION_TEMPLATE_ID,
+        environmentId:          PERSONA_ENV_ID,   // env_… (sandbox); omit for prod
+        referenceId:            customerId,       // ties inquiry ⇆ user
       }),
     })
 
-    if (!r.ok) {
-      const detail = await r.text()
+    if (!resp.ok) {
+      const detail = await resp.text()
       console.error("Persona API error →", detail)
-      return NextResponse.json(
-        { error: "Persona API error", detail },
-        { status: 502 }
-      )
+      return NextResponse.json({ error: "Persona API error", detail }, { status: 502 })
     }
 
-    const { data } = await r.json() // Persona wraps payload in { data: { id … } }
+    const { data } = await resp.json() // { data: { id: "inq_xxx" } }
     const link = `https://withpersona.com/verify?inquiry-id=${data.id}`
 
     return NextResponse.json({ link })
