@@ -1,171 +1,157 @@
 "use client"
 
-import React, { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
+import { useFormState } from "react-dom"
 
 import Input from "@modules/common/components/input"
 import NativeSelect from "@modules/common/components/native-select"
-
 import AccountInfo from "../account-info"
-import { useFormState } from "react-dom"
-import { HttpTypes } from "@medusajs/types"
-import { updateCustomerAddress } from "@lib/data/customer"
 
-type MyInformationProps = {
+import { updateCustomerAddress } from "@lib/data/customer"
+import { HttpTypes } from "@medusajs/types"
+
+type Props = {
   customer: HttpTypes.StoreCustomer
   regions: HttpTypes.StoreRegion[]
 }
 
-const ProfileBillingAddress: React.FC<MyInformationProps> = ({
-  customer,
-  regions,
-}) => {
-  const regionOptions = useMemo(() => {
-    return (
-      regions
-        ?.map((region) => {
-          return region.countries?.map((country) => ({
-            value: country.iso_2,
-            label: country.display_name,
-          }))
-        })
-        .flat() || []
-    )
-  }, [regions])
-
-  const [successState, setSuccessState] = React.useState(false)
-
-  const [state, formAction] = useFormState(updateCustomerAddress, {
-    error: false,
-    success: false,
-  })
-
-  const clearState = () => {
-    setSuccessState(false)
-  }
-
-  useEffect(() => {
-    setSuccessState(state.success)
-  }, [state])
-
-  const billingAddress = customer.addresses?.find(
-    (addr) => addr.is_default_billing
+export default function ProfileBillingAddress({ customer, regions }: Props) {
+  /* country select options */
+  const opts = useMemo(
+    () =>
+      regions.flatMap((r) =>
+        r.countries?.map((c) => ({ value: c.iso_2, label: c.display_name }))
+      ),
+    [regions]
   )
 
-  const currentInfo = useMemo(() => {
-    if (!billingAddress) {
-      return "No billing address"
+  const billing = customer.addresses?.find((a) => a.is_default_billing) ?? null
+
+  /* form state */
+  const [state, action] = useFormState(updateCustomerAddress, {
+    success: false,
+    error: null as string | null,
+  })
+  const [tick, setTick] = useState(false)
+
+  useEffect(() => {
+    if (state.success) {
+      setTick(true)
+      const t = setTimeout(() => setTick(false), 1800)
+      return () => clearTimeout(t)
     }
+  }, [state.success])
+
+  /* current address string */
+  const info = useMemo(() => {
+    if (!billing) return "No billing address"
 
     const country =
-      regionOptions?.find(
-        (country) => country?.value === billingAddress.country_code
-      )?.label || billingAddress.country_code?.toUpperCase()
+      opts.find((o) => o && o.value === billing.country_code)?.label ??
+      billing.country_code?.toUpperCase()
 
     return (
-      <div className="flex flex-col font-semibold" data-testid="current-info">
+      <div className="flex flex-col font-semibold">
         <span>
-          {billingAddress.first_name} {billingAddress.last_name}
+          {billing.first_name} {billing.last_name}
         </span>
-        <span>{billingAddress.company}</span>
+        {billing.company && <span>{billing.company}</span>}
         <span>
-          {billingAddress.address_1}
-          {billingAddress.address_2 ? `, ${billingAddress.address_2}` : ""}
+          {billing.address_1}
+          {billing.address_2 ? `, ${billing.address_2}` : ""}
         </span>
         <span>
-          {billingAddress.postal_code}, {billingAddress.city}
+          {billing.postal_code}, {billing.city}
         </span>
         <span>{country}</span>
       </div>
     )
-  }, [billingAddress, regionOptions])
+  }, [billing, opts])
 
+  /* --------------------------------------------------------------- */
   return (
-    <form action={formAction} onReset={() => clearState()} className="w-full">
+    <form action={action} className="w-full">
+      <input type="hidden" name="address_id" value={billing?.id ?? ""} />
+
       <AccountInfo
         label="Billing address"
-        currentInfo={currentInfo}
-        isSuccess={successState}
+        currentInfo={info}
+        isSuccess={tick}
         isError={!!state.error}
-        clearState={clearState}
-        data-testid="account-billing-address-editor"
+        clearState={() => setTick(false)}
       >
         <div className="grid grid-cols-1 gap-y-2">
           <div className="grid grid-cols-2 gap-x-2">
             <Input
               label="First name"
               name="billing_address.first_name"
-              defaultValue={billingAddress?.first_name || undefined}
+              defaultValue={billing?.first_name ?? ""}
               required
-              data-testid="billing-first-name-input"
             />
             <Input
               label="Last name"
               name="billing_address.last_name"
-              defaultValue={billingAddress?.last_name || undefined}
+              defaultValue={billing?.last_name ?? ""}
               required
-              data-testid="billing-last-name-input"
             />
           </div>
+
           <Input
             label="Company"
             name="billing_address.company"
-            defaultValue={billingAddress?.company || undefined}
-            data-testid="billing-company-input"
+            defaultValue={billing?.company ?? ""}
           />
+
           <Input
             label="Address"
             name="billing_address.address_1"
-            defaultValue={billingAddress?.address_1 || undefined}
+            defaultValue={billing?.address_1 ?? ""}
             required
-            data-testid="billing-address-1-input"
           />
           <Input
             label="Apartment, suite, etc."
             name="billing_address.address_2"
-            defaultValue={billingAddress?.address_2 || undefined}
-            data-testid="billing-address-2-input"
+            defaultValue={billing?.address_2 ?? ""}
           />
+
           <div className="grid grid-cols-[144px_1fr] gap-x-2">
             <Input
               label="Postal code"
               name="billing_address.postal_code"
-              defaultValue={billingAddress?.postal_code || undefined}
+              defaultValue={billing?.postal_code ?? ""}
               required
-              data-testid="billing-postcal-code-input"
             />
             <Input
               label="City"
               name="billing_address.city"
-              defaultValue={billingAddress?.city || undefined}
+              defaultValue={billing?.city ?? ""}
               required
-              data-testid="billing-city-input"
             />
           </div>
+
           <Input
             label="Province"
             name="billing_address.province"
-            defaultValue={billingAddress?.province || undefined}
-            data-testid="billing-province-input"
+            defaultValue={billing?.province ?? ""}
           />
+
           <NativeSelect
             name="billing_address.country_code"
-            defaultValue={billingAddress?.country_code || undefined}
+            defaultValue={billing?.country_code ?? ""}
             required
-            data-testid="billing-country-code-select"
           >
             <option value="">-</option>
-            {regionOptions.map((option, i) => {
-              return (
-                <option key={i} value={option?.value}>
-                  {option?.label}
-                </option>
-              )
-            })}
+            {opts.map(
+              (o) =>
+                o && (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                )
+            )}
           </NativeSelect>
         </div>
       </AccountInfo>
     </form>
   )
 }
-
-export default ProfileBillingAddress

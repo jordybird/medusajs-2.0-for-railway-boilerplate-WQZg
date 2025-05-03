@@ -11,39 +11,50 @@ type ItemsTemplateProps = {
 
 const ItemsTemplate = ({ items }: ItemsTemplateProps) => {
   return (
-    <div>
-      <div className="pb-3 flex items-center">
-        <Heading className="text-[2rem] leading-[2.75rem]">Cart</Heading>
-      </div>
-      <Table>
-        <Table.Header className="border-t-0">
-          <Table.Row className="text-ui-fg-subtle txt-medium-plus">
-            <Table.HeaderCell className="!pl-0">Item</Table.HeaderCell>
-            <Table.HeaderCell></Table.HeaderCell>
-            <Table.HeaderCell>Quantity</Table.HeaderCell>
-            <Table.HeaderCell className="hidden small:table-cell">
+    <section className="flex flex-col gap-y-6">
+      {/* ───────── Title ───────── */}
+      <Heading level="h1" className="text-2xl font-semibold text-white">
+        Cart
+      </Heading>
+
+      {/* ───────── Table ───────── */}
+      <Table className="bg-[#222222] rounded-lg overflow-hidden border border-gray-700">
+        {/* Header */}
+        <Table.Header className="bg-[#222222]">
+          <Table.Row className="border-b !border-gray-700 text-white text-sm">
+            <Table.HeaderCell className="!pl-4 !bg-[#222222]">
+              Item
+            </Table.HeaderCell>
+
+            {/* empty cell for delete icon */}
+            <Table.HeaderCell className="!bg-[#222222]" />
+
+            <Table.HeaderCell className="!bg-[#222222]">
+              Quantity
+            </Table.HeaderCell>
+
+            <Table.HeaderCell className="hidden small:table-cell !bg-[#222222]">
               Price
             </Table.HeaderCell>
-            <Table.HeaderCell className="!pr-0 text-right">
+
+            <Table.HeaderCell className="!pr-4 text-right !bg-[#222222]">
               Total
             </Table.HeaderCell>
           </Table.Row>
         </Table.Header>
-        <Table.Body>
+
+        {/* Body */}
+        <Table.Body className="[&_tr]:border-b [&_tr]:border-gray-700">
           {items
             ? items
-                .sort((a, b) => {
-                  return (a.created_at ?? "") > (b.created_at ?? "") ? -1 : 1
-                })
-                .map((item) => {
-                  return <Item key={item.id} item={item} />
-                })
-            : repeat(5).map((i) => {
-                return <SkeletonLineItem key={i} />
-              })}
+                .sort((a, b) =>
+                  (a.created_at ?? "") > (b.created_at ?? "") ? -1 : 1
+                )
+                .map((item) => <Item key={item.id} item={item} />)
+            : repeat(5).map((i) => <SkeletonLineItem key={i} />)}
         </Table.Body>
       </Table>
-    </div>
+    </section>
   )
 }
 

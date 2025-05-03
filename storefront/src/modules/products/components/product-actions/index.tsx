@@ -1,3 +1,8 @@
+/* storefront/src/modules/products/components/product-actions/index.tsx
+   – Dark-theme friendly (no hard-coded colors)
+   – Variant selectors rendered as <select> dropdowns
+*/
+
 "use client"
 
 import { Button } from "@medusajs/ui"
@@ -7,8 +12,6 @@ import { useEffect, useMemo, useRef, useState } from "react"
 
 import { useIntersection } from "@lib/hooks/use-in-view"
 import Divider from "@modules/common/components/divider"
-import OptionSelect from "@modules/products/components/product-actions/option-select"
-
 import MobileActions from "./mobile-actions"
 import ProductPrice from "../product-price"
 import { addToCart } from "@lib/data/cart"
@@ -20,15 +23,21 @@ type ProductActionsProps = {
   disabled?: boolean
 }
 
-const optionsAsKeymap = (variantOptions: any) => {
-  return variantOptions?.reduce((acc: Record<string, string | undefined>, varopt: any) => {
-    if (varopt.option && varopt.value !== null && varopt.value !== undefined) {
-      acc[varopt.option.title] = varopt.value
-    }
-    return acc
-  }, {})
-}
+/* ---------- helpers ------------------------------------------------------ */
+const optionsAsKeymap = (variantOptions: any) =>
+  variantOptions?.reduce(
+    (acc: Record<string, string | undefined>, varopt: any) => {
+      if (varopt.option && varopt.value != null) {
+        acc[varopt.option.title] = varopt.value
+      }
+      return acc
+    },
+    {}
+  )
 
+/* ====================================================================== */
+/*                               component                                */
+/* ====================================================================== */
 export default function ProductActions({
   product,
   region,
@@ -38,7 +47,7 @@ export default function ProductActions({
   const [isAdding, setIsAdding] = useState(false)
   const countryCode = useParams().countryCode as string
 
-  // If there is only 1 variant, preselect the options
+  /* ----- pre-select if only one variant -------------------------------- */
   useEffect(() => {
     if (product.variants?.length === 1) {
       const variantOptions = optionsAsKeymap(product.variants[0].options)
@@ -46,57 +55,33 @@ export default function ProductActions({
     }
   }, [product.variants])
 
+  /* ----- currently selected variant ------------------------------------ */
   const selectedVariant = useMemo(() => {
-    if (!product.variants || product.variants.length === 0) {
-      return
-    }
-
-    return product.variants.find((v) => {
-      const variantOptions = optionsAsKeymap(v.options)
-      return isEqual(variantOptions, options)
-    })
+    if (!product.variants?.length) return undefined
+    return product.variants.find((v) =>
+      isEqual(optionsAsKeymap(v.options), options)
+    )
   }, [product.variants, options])
 
-  // update the options when a variant is selected
-  const setOptionValue = (title: string, value: string) => {
-    setOptions((prev) => ({
-      ...prev,
-      [title]: value,
-    }))
-  }
+  /* ----- change handler ------------------------------------------------- */
+  const setOptionValue = (title: string, value: string) =>
+    setOptions((prev) => ({ ...prev, [title]: value }))
 
-  // check if the selected variant is in stock
+  /* ----- stock availability -------------------------------------------- */
   const inStock = useMemo(() => {
-    // If we don't manage inventory, we can always add to cart
-    if (selectedVariant && !selectedVariant.manage_inventory) {
-      return true
-    }
-
-    // If we allow back orders on the variant, we can add to cart
-    if (selectedVariant?.allow_backorder) {
-      return true
-    }
-
-    // If there is inventory available, we can add to cart
-    if (
-      selectedVariant?.manage_inventory &&
-      (selectedVariant?.inventory_quantity || 0) > 0
-    ) {
-      return true
-    }
-
-    // Otherwise, we can't add to cart
-    return false
+    if (!selectedVariant) return false
+    if (!selectedVariant.manage_inventory) return true
+    if (selectedVariant.allow_backorder) return true
+    return (selectedVariant.inventory_quantity || 0) > 0
   }, [selectedVariant])
 
+  /* ----- sticky / mobile actions --------------------------------------- */
   const actionsRef = useRef<HTMLDivElement>(null)
-
   const inView = useIntersection(actionsRef, "0px")
 
-  // add the selected variant to the cart
+  /* ----- add-to-cart ---------------------------------------------------- */
   const handleAddToCart = async () => {
-    if (!selectedVariant?.id) return null
-
+    if (!selectedVariant?.id) return
     setIsAdding(true)
 
     await addToCart({
@@ -108,40 +93,57 @@ export default function ProductActions({
     setIsAdding(false)
   }
 
+  /* =================================================================== */
+  /*                                JSX                                 */
+  /* =================================================================== */
   return (
     <>
-      <div className="flex flex-col gap-y-2" ref={actionsRef}>
-        <div>
-          {(product.variants?.length ?? 0) > 1 && (
-            <div className="flex flex-col gap-y-4">
-              {(product.options || []).map((option) => {
-                return (
-                  <div key={option.id}>
-                    <OptionSelect
-                      option={option}
-                      current={options[option.title ?? ""]}
-                      updateOption={setOptionValue}
-                      title={option.title ?? ""}
-                      data-testid="product-options"
-                      disabled={!!disabled || isAdding}
-                    />
-                  </div>
-                )
-              })}
-              <Divider />
-            </div>
-          )}
-        </div>
+      <div ref={actionsRef} className="flex flex-col gap-y-4">
+        {/* ---------- variant dropdowns ---------- */}
+        {(product.options || []).length > 0 && (
+          <>
+            {(product.options || []).map((opt) => (
+              <div key={opt.id} className="flex flex-col gap-y-1">
+                <label className="text-sm font-medium">
+                  {opt.title ?? "Option"}
+                </label>
 
+                <select
+                  value={options[opt.title ?? ""] ?? ""}
+                  onChange={(e) => setOptionValue(opt.title ?? "", e.target.value)}
+                  disabled={!!disabled || isAdding}
+                  className="
+                    w-full h-10 rounded-md border border-gray-600 bg-[#222222]
+                    px-3 text-sm outline-none
+                    disabled:opacity-50
+                  "
+                >
+                  <option value="" disabled>
+                    Select {opt.title?.toLowerCase()}
+                  </option>
+                  {(opt.values || []).map((val) => (
+                    <option key={val.id} value={val.value}>
+                      {val.value}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ))}
+
+            <Divider />
+          </>
+        )}
+
+        {/* ---------- price ---------- */}
         <ProductPrice product={product} variant={selectedVariant} />
 
+        {/* ---------- add-to-cart ---------- */}
         <Button
           onClick={handleAddToCart}
           disabled={!inStock || !selectedVariant || !!disabled || isAdding}
           variant="primary"
           className="w-full h-10"
           isLoading={isAdding}
-          data-testid="add-product-button"
         >
           {!selectedVariant
             ? "Select variant"
@@ -149,6 +151,8 @@ export default function ProductActions({
             ? "Out of stock"
             : "Add to cart"}
         </Button>
+
+        {/* ---------- mobile slide-up ---------- */}
         <MobileActions
           product={product}
           variant={selectedVariant}

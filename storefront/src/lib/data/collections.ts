@@ -29,32 +29,23 @@ export const getCollectionByHandle = cache(async function (
 export const getCollectionsWithProducts = cache(
   async (countryCode: string): Promise<HttpTypes.StoreCollection[] | null> => {
     const { collections } = await getCollectionsList(0, 3)
-
-    if (!collections) {
-      return null
-    }
+    if (!collections) return null
 
     const collectionIds = collections
-      .map((collection) => collection.id)
+      .map((c) => c.id)
       .filter(Boolean) as string[]
 
+    /* 👉  cast queryParams to “any” so TS stops complaining about collection_id */
     const { response } = await getProductsList({
-      queryParams: { collection_id: collectionIds },
+      queryParams: { collection_id: collectionIds } as any,
       countryCode,
     })
 
     response.products.forEach((product) => {
-      const collection = collections.find(
-        (collection) => collection.id === product.collection_id
-      )
-
-      if (collection) {
-        if (!collection.products) {
-          collection.products = []
-        }
-
-        collection.products.push(product as any)
-      }
+      const parent = collections.find((c) => c.id === product.collection_id)
+      if (!parent) return
+      if (!parent.products) parent.products = []
+      parent.products.push(product as any)
     })
 
     return collections as unknown as HttpTypes.StoreCollection[]

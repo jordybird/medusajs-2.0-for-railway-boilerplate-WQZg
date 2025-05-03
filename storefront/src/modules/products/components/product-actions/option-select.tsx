@@ -16,38 +16,40 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
   current,
   updateOption,
   title,
-  "data-testid": dataTestId,
   disabled,
+  "data-testid": dataTestId,
 }) => {
-  const filteredOptions = option.values?.map((v) => v.value)
+  const values = option.values?.map((v) => v.value) || []
 
   return (
-    <div className="flex flex-col gap-y-3">
+    <div className="flex flex-col gap-y-3 text-white">
       <span className="text-sm">Select {title}</span>
+
+      {/* Scrollable list */}
       <div
-        className="flex flex-wrap justify-between gap-2"
+        className="max-h-48 overflow-y-auto flex flex-col gap-y-2 pr-1"
         data-testid={dataTestId}
       >
-        {filteredOptions?.map((v) => {
-          return (
-            <button
-              onClick={() => updateOption(option.title ?? "", v ?? "")}
-              key={v}
-              className={clx(
-                "border-ui-border-base bg-ui-bg-subtle border text-small-regular h-10 rounded-rounded p-2 flex-1 ",
-                {
-                  "border-ui-border-interactive": v === current,
-                  "hover:shadow-elevation-card-rest transition-shadow ease-in-out duration-150":
-                    v !== current,
-                }
-              )}
-              disabled={disabled}
-              data-testid="option-button"
-            >
-              {v}
-            </button>
-          )
-        })}
+        {values.map((v) => (
+          <button
+            key={v}
+            disabled={disabled}
+            onClick={() => updateOption(option.title ?? "", v ?? "")}
+            data-testid="option-button"
+            className={clx(
+              "w-full text-left rounded-md px-3 py-2",
+              "bg-[#222222] text-white border transition-colors",
+              {
+                "border-white": v === current,
+                "border-white/30 hover:border-white/60":
+                  v !== current && !disabled,
+                "opacity-50 cursor-not-allowed": disabled,
+              },
+            )}
+          >
+            {v}
+          </button>
+        ))}
       </div>
     </div>
   )

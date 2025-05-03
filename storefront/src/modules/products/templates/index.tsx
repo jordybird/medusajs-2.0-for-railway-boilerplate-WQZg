@@ -1,63 +1,97 @@
+/* storefront/src/modules/products/templates/index.tsx
+   – white title is handled by ProductInfo above
+   – only the Shipping & Returns accordion remains
+*/
+
 import React, { Suspense } from "react"
 
 import ImageGallery from "@modules/products/components/image-gallery"
 import ProductActions from "@modules/products/components/product-actions"
 import ProductOnboardingCta from "@modules/products/components/product-onboarding-cta"
-import ProductTabs from "@modules/products/components/product-tabs"
 import RelatedProducts from "@modules/products/components/related-products"
-import ProductInfo from "@modules/products/templates/product-info"
 import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
-import { notFound } from "next/navigation"
+import ProductInfo from "@modules/products/templates/product-info"
 import ProductActionsWrapper from "./product-actions-wrapper"
 import { HttpTypes } from "@medusajs/types"
 
-type ProductTemplateProps = {
+/* a tiny one-off accordion for Shipping & Returns */
+const ShippingAccordion = () => (
+  <details className="border-t border-gray-600 pt-4 text-sm">
+    <summary className="cursor-pointer select-none text-gray-300">
+      Shipping &amp; Returns
+    </summary>
+    <div className="pt-3 text-gray-400">
+      Orders ship within 24 h. Returns accepted within 30 days on unopened
+      items. See our full policy at checkout.
+    </div>
+  </details>
+)
+
+/* thumbnail rail (same as before) */
+const ThumbRail = ({ images }: { images: HttpTypes.StoreProductImage[] }) => (
+  <nav className="hidden small:flex flex-col gap-2 sticky top-32">
+    {images.map((img) => (
+      <a
+        key={img.id}
+        href={`#${img.id}`}
+        className="block w-20 h-20 relative overflow-hidden rounded
+                   ring-1 ring-transparent hover:ring-lime-500 transition"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={img.url}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      </a>
+    ))}
+  </nav>
+)
+
+type Props = {
   product: HttpTypes.StoreProduct
   region: HttpTypes.StoreRegion
   countryCode: string
 }
 
-const ProductTemplate: React.FC<ProductTemplateProps> = ({
-  product,
-  region,
-  countryCode,
-}) => {
-  if (!product || !product.id) {
-    return notFound()
-  }
+const ProductTemplate: React.FC<Props> = ({ product, region, countryCode }) => {
+  if (!product?.id) return null
 
   return (
     <>
-      <div
-        className="content-container flex flex-col small:flex-row small:items-start py-6 relative"
-        data-testid="product-container"
-      >
-        <div className="flex flex-col small:sticky small:top-48 small:py-0 small:max-w-[300px] w-full py-8 gap-y-6">
+      {/* ─────────── Product body ─────────── */}
+      <div className="content-container grid grid-cols-1 small:grid-cols-12 gap-x-8 py-6">
+        <div className="small:col-span-2">
+          <ThumbRail images={product.images || []} />
+        </div>
+
+        <div className="small:col-span-6">
+          <ImageGallery images={product.images || []} />
+        </div>
+
+        {/* Buy-box – dark panel */}
+        <aside
+          className="small:col-span-4 flex flex-col gap-y-8 sticky top-32
+                     bg-[#222222] text-white rounded-lg p-6"
+        >
           <ProductInfo product={product} />
-          <ProductTabs product={product} />
-        </div>
-        <div className="block w-full relative">
-          <ImageGallery images={product?.images || []} />
-        </div>
-        <div className="flex flex-col small:sticky small:top-48 small:py-0 small:max-w-[300px] w-full py-8 gap-y-12">
           <ProductOnboardingCta />
+
           <Suspense
             fallback={
-              <ProductActions
-                disabled={true}
-                product={product}
-                region={region}
-              />
+              <ProductActions disabled product={product} region={region} />
             }
           >
             <ProductActionsWrapper id={product.id} region={region} />
           </Suspense>
-        </div>
+
+          {/* Only shipping accordion shown */}
+          <ShippingAccordion />
+        </aside>
       </div>
-      <div
-        className="content-container my-16 small:my-32"
-        data-testid="related-products-container"
-      >
+
+      {/* Related products (unchanged) */}
+      <div className="content-container my-16 small:my-32">
         <Suspense fallback={<SkeletonRelatedProducts />}>
           <RelatedProducts product={product} countryCode={countryCode} />
         </Suspense>

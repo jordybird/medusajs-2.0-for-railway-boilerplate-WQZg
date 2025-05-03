@@ -50,6 +50,9 @@ importers:
       '@rokmohar/medusa-plugin-meilisearch':
         specifier: ^1.0.3
         version: 1.0.6(hbt5yrrshqzmoq4aug23tmzpsm)
+      '@sendgrid/mail':
+        specifier: ^8.1.5
+        version: 8.1.5
       awilix:
         specifier: ^8.0.1
         version: 8.0.1
@@ -3455,16 +3458,16 @@ packages:
   '@selderee/plugin-htmlparser2@0.11.0':
     resolution: {integrity: sha512-P33hHGdldxGabLFjPPpaTxVolMrzrcegejx+0GxjrIb9Zv48D8yAIA/QTDR2dFl7Uz7urX8aX6+5bCZslr+gWQ==}
 
-  '@sendgrid/client@8.1.4':
-    resolution: {integrity: sha512-VxZoQ82MpxmjSXLR3ZAE2OWxvQIW2k2G24UeRPr/SYX8HqWLV/8UBN15T2WmjjnEb5XSmFImTJOKDzzSeKr9YQ==}
+  '@sendgrid/client@8.1.5':
+    resolution: {integrity: sha512-Jqt8aAuGIpWGa15ZorTWI46q9gbaIdQFA21HIPQQl60rCjzAko75l3D1z7EyjFrNr4MfQ0StusivWh8Rjh10Cg==}
     engines: {node: '>=12.*'}
 
   '@sendgrid/helpers@8.0.0':
     resolution: {integrity: sha512-Ze7WuW2Xzy5GT5WRx+yEv89fsg/pgy3T1E3FS0QEx0/VvRmigMZ5qyVGhJz4SxomegDkzXv/i0aFPpHKN8qdAA==}
     engines: {node: '>= 12.0.0'}
 
-  '@sendgrid/mail@8.1.4':
-    resolution: {integrity: sha512-MUpIZykD9ARie8LElYCqbcBhGGMaA/E6I7fEcG7Hc2An26QJyLtwOaKQ3taGp8xO8BICPJrSKuYV4bDeAJKFGQ==}
+  '@sendgrid/mail@8.1.5':
+    resolution: {integrity: sha512-W+YuMnkVs4+HA/bgfto4VHKcPKLc7NiZ50/NH2pzO6UHCCFuq8/GNB98YJlLEr/ESDyzAaDr7lVE7hoBwFTT3Q==}
     engines: {node: '>=12.*'}
 
   '@sinclair/typebox@0.27.8':
@@ -9214,7 +9217,7 @@ snapshots:
   '@medusajs/notification-sendgrid@2.6.1(@medusajs/framework@2.6.1(@medusajs/cli@2.6.1(@mikro-orm/core@6.4.3)(@mikro-orm/knex@6.4.3(@mikro-orm/core@6.4.3)(pg@8.14.1))(@mikro-orm/migrations@6.4.3(@mikro-orm/core@6.4.3)(@types/node@20.17.30)(pg@8.14.1))(@mikro-orm/postgresql@6.4.3(@mikro-orm/core@6.4.3))(awilix@8.0.1)(ioredis@5.6.0)(pg@8.14.1)(vite@5.4.16(@types/node@20.17.30)))(@mikro-orm/cli@6.4.3(pg@8.14.1))(@mikro-orm/core@6.4.3)(@mikro-orm/knex@6.4.3(@mikro-orm/core@6.4.3)(pg@8.14.1))(@mikro-orm/migrations@6.4.3(@mikro-orm/core@6.4.3)(@types/node@20.17.30)(pg@8.14.1))(@mikro-orm/postgresql@6.4.3(@mikro-orm/core@6.4.3))(awilix@8.0.1)(ioredis@5.6.0)(pg@8.14.1)(vite@5.4.16(@types/node@20.17.30)))':
     dependencies:
       '@medusajs/framework': 2.6.1(@medusajs/cli@2.6.1(@mikro-orm/core@6.4.3)(@mikro-orm/knex@6.4.3(@mikro-orm/core@6.4.3)(pg@8.14.1))(@mikro-orm/migrations@6.4.3(@mikro-orm/core@6.4.3)(@types/node@20.17.30)(pg@8.14.1))(@mikro-orm/postgresql@6.4.3(@mikro-orm/core@6.4.3))(awilix@8.0.1)(ioredis@5.6.0)(pg@8.14.1)(vite@5.4.16(@types/node@20.17.30)))(@mikro-orm/cli@6.4.3(pg@8.14.1))(@mikro-orm/core@6.4.3)(@mikro-orm/knex@6.4.3(@mikro-orm/core@6.4.3)(pg@8.14.1))(@mikro-orm/migrations@6.4.3(@mikro-orm/core@6.4.3)(@types/node@20.17.30)(pg@8.14.1))(@mikro-orm/postgresql@6.4.3(@mikro-orm/core@6.4.3))(awilix@8.0.1)(ioredis@5.6.0)(pg@8.14.1)(vite@5.4.16(@types/node@20.17.30))
-      '@sendgrid/mail': 8.1.4
+      '@sendgrid/mail': 8.1.5
     transitivePeerDependencies:
       - debug
 
@@ -11779,7 +11782,7 @@ snapshots:
       domhandler: 5.0.3
       selderee: 0.11.0
 
-  '@sendgrid/client@8.1.4':
+  '@sendgrid/client@8.1.5':
     dependencies:
       '@sendgrid/helpers': 8.0.0
       axios: 1.8.4
@@ -11790,9 +11793,9 @@ snapshots:
     dependencies:
       deepmerge: 4.3.1
 
-  '@sendgrid/mail@8.1.4':
+  '@sendgrid/mail@8.1.5':
     dependencies:
-      '@sendgrid/client': 8.1.4
+      '@sendgrid/client': 8.1.5
       '@sendgrid/helpers': 8.0.0
     transitivePeerDependencies:
       - debug

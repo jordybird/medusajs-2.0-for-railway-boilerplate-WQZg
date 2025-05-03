@@ -1,29 +1,31 @@
 "use client"
 
 import Link from "next/link"
-import { useParams } from "next/navigation"
 import React from "react"
 
 /**
- * Use this component to create a Next.js `<Link />` that persists the current country code in the url,
- * without having to explicitly pass it as a prop.
+ * US-only storefront:
+ * Always prefixes links with “/us” and ignores whatever
+ * dynamic country code might have been in the URL params.
  */
 const LocalizedClientLink = ({
   children,
   href,
   ...props
-}: {
-  children?: React.ReactNode
+}: React.PropsWithChildren<{
   href: string
   className?: string
   onClick?: () => void
   passHref?: true
-  [x: string]: any
-}) => {
-  const { countryCode } = useParams()
+  [key: string]: any
+}>) => {
+  const prefix = "/us"
+
+  // ensure we don’t end up with “//” if someone passes a leading slash
+  const path = href.startsWith("/") ? href : `/${href}`
 
   return (
-    <Link href={`/${countryCode}${href}`} {...props}>
+    <Link href={`${prefix}${path}`} {...props}>
       {children}
     </Link>
   )
