@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     }
 
     /* 2b  Create verification order on BlueCheck --------------- */
-    const bc = await fetch(`${BLUECHECK_API}/verify/photo-id`, {
+    const bc = await fetch(`${BLUECHECK_API}/v1/verification`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
