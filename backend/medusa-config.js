@@ -1,33 +1,53 @@
 import { loadEnv, Modules, defineConfig } from "@medusajs/utils"
 import {
-  ADMIN_CORS,
-  AUTH_CORS,
-  BACKEND_URL,
-  COOKIE_SECRET,
-  DATABASE_URL,
-  JWT_SECRET,
-  REDIS_URL,
-  RESEND_API_KEY,
-  RESEND_FROM_EMAIL,
+  /* core */
+  ADMIN_CORS, AUTH_CORS, STORE_CORS,
+  BACKEND_URL, COOKIE_SECRET, DATABASE_URL, JWT_SECRET,
+  REDIS_URL, WORKER_MODE,
+  /* file / email / search */
+  MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET,
+  RESEND_API_KEY, RESEND_FROM_EMAIL,
+  MEILISEARCH_HOST, MEILISEARCH_ADMIN_KEY,
+  /* Stripe */
+  STRIPE_API_KEY, STRIPE_WEBHOOK_SECRET,
+  /* Mentom */
+  MENTOM_API_KEY, MENTOM_TERMINAL_ID,
+  MENTOM_WEBHOOK_SECRET, MENTOM_CAPTURE, MENTOM_BASE_URL,
+  /* misc */
   SHOULD_DISABLE_ADMIN,
-  STORE_CORS,
-  STRIPE_API_KEY,
-  STRIPE_WEBHOOK_SECRET,
-  WORKER_MODE,
-  MINIO_ENDPOINT,
-  MINIO_ACCESS_KEY,
-  MINIO_SECRET_KEY,
-  MINIO_BUCKET,
-  MEILISEARCH_HOST,
-  MEILISEARCH_ADMIN_KEY,
 } from "lib/constants"
 
 loadEnv(process.env.NODE_ENV, process.cwd())
 
+/* ---------------------------------------------------- */
+/* Payment provider array (Stripe, Mentom if configured) */
+/* ---------------------------------------------------- */
+const paymentProviders = []
+
+if (STRIPE_API_KEY && STRIPE_WEBHOOK_SECRET) {
+  paymentProviders.push({
+    resolve: "@medusajs/payment-stripe",
+    id: "stripe",
+    options: { apiKey: STRIPE_API_KEY, webhookSecret: STRIPE_WEBHOOK_SECRET },
+  })
+}
+
+if (MENTOM_API_KEY && MENTOM_TERMINAL_ID) {
+  paymentProviders.push({
+    resolve: "./src/modules/providers/payment-mentom",
+    id: "mentom",
+    options: {
+      apiKey:        MENTOM_API_KEY,
+      terminalId:    Number(MENTOM_TERMINAL_ID),
+      webhookSecret: MENTOM_WEBHOOK_SECRET,
+      capture:       MENTOM_CAPTURE,        // true = /sale, false = /auth + /capture
+      baseUrl:       MENTOM_BASE_URL,       // optional sandbox host
+    },
+  })
+}
+
 const medusaConfig = {
-  /* ------------------------------------------------------------------ */
-  /* core config                                                         */
-  /* ------------------------------------------------------------------ */
+  /* ───────── Core project config ───────── */
   projectConfig: {
     databaseUrl: DATABASE_URL,
     databaseLogging: false,
@@ -42,22 +62,17 @@ const medusaConfig = {
     },
   },
 
-  admin: {
-    backendUrl: BACKEND_URL,
-    disable: SHOULD_DISABLE_ADMIN,
-  },
+  admin: { backendUrl: BACKEND_URL, disable: SHOULD_DISABLE_ADMIN },
 
-  /* ------------------------------------------------------------------ */
-  /* modules                                                             */
-  /* ------------------------------------------------------------------ */
+  /* ───────── Modules array ───────── */
   modules: [
-    /* ---------- File storage (local or MinIO) ----------------------- */
+    /* ----- File storage (local or MinIO) ----- */
     {
       key: Modules.FILE,
       resolve: "@medusajs/file",
       options: {
-        providers: [
-          ...(MINIO_ENDPOINT && MINIO_ACCESS_KEY && MINIO_SECRET_KEY
+        providers:
+          MINIO_ENDPOINT && MINIO_ACCESS_KEY && MINIO_SECRET_KEY
             ? [
                 {
                   resolve: "./src/modules/minio-file",
@@ -79,12 +94,11 @@ const medusaConfig = {
                     backend_url: `${BACKEND_URL}/static`,
                   },
                 },
-              ]),
-        ],
+              ],
       },
     },
 
-    /* ---------- Event bus + workflows (Redis) ---------------------- */
+    /* ----- Event bus & workflow (Redis) ----- */
     ...(REDIS_URL
       ? [
           {
@@ -100,7 +114,7 @@ const medusaConfig = {
         ]
       : []),
 
-    /* ---------- Notification (Resend-only) ------------------------- */
+    /* ----- Notification (Resend) ----- */
     ...(RESEND_API_KEY && RESEND_FROM_EMAIL
       ? [
           {
@@ -123,32 +137,19 @@ const medusaConfig = {
         ]
       : []),
 
-    /* ---------- Stripe (if keys present) --------------------------- */
-    ...(STRIPE_API_KEY && STRIPE_WEBHOOK_SECRET
+    /* ----- Payment module (Stripe + Mentom) ----- */
+    ...(paymentProviders.length
       ? [
           {
             key: Modules.PAYMENT,
             resolve: "@medusajs/payment",
-            options: {
-              providers: [
-                {
-                  resolve: "@medusajs/payment-stripe",
-                  id: "stripe",
-                  options: {
-                    apiKey: STRIPE_API_KEY,
-                    webhookSecret: STRIPE_WEBHOOK_SECRET,
-                  },
-                },
-              ],
-            },
+            options: { providers: paymentProviders },
           },
         ]
       : []),
   ],
 
-  /* ------------------------------------------------------------------ */
-  /* plugins                                                            */
-  /* ------------------------------------------------------------------ */
+  /* ───────── Plugins array ───────── */
   plugins: [
     ...(MEILISEARCH_HOST && MEILISEARCH_ADMIN_KEY
       ? [
