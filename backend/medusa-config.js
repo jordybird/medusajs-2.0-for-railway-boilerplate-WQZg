@@ -1,217 +1,141 @@
+/**
+ * backend/medusa-config.js
+ * Clean, Mentom-only Medusa 2 configuration (no Stripe)
+ */
 import { loadEnv, Modules, defineConfig } from "@medusajs/utils"
 import {
-  /* ── core ─────────────────────────────────────────── */
-  ADMIN_CORS,
-  AUTH_CORS,
-  STORE_CORS,
-  BACKEND_URL,
-  COOKIE_SECRET,
-  DATABASE_URL,
-  JWT_SECRET,
-  REDIS_URL,
-  WORKER_MODE,
-  /* ── file / email / search ─────────────────────────── */
-  MINIO_ENDPOINT,
-  MINIO_ACCESS_KEY,
-  MINIO_SECRET_KEY,
-  MINIO_BUCKET,
-  RESEND_API_KEY,
-  RESEND_FROM_EMAIL,
-  MEILISEARCH_HOST,
-  MEILISEARCH_ADMIN_KEY,
-  /* ── Stripe ────────────────────────────────────────── */
-  STRIPE_API_KEY,
-  STRIPE_WEBHOOK_SECRET,
-  /* ── Mentom ────────────────────────────────────────── */
-  MENTOM_API_KEY,
-  MENTOM_TERMINAL_ID,
-  MENTOM_WEBHOOK_SECRET,
-  MENTOM_CAPTURE,
-  MENTOM_BASE_URL,
-  /* ── misc ──────────────────────────────────────────── */
+  /* core ─────────────────────────────────────────────── */
+  ADMIN_CORS, AUTH_CORS, STORE_CORS,
+  BACKEND_URL, COOKIE_SECRET, DATABASE_URL, JWT_SECRET,
+  REDIS_URL, WORKER_MODE,
+  /* file / email / search ─────────────────────────────── */
+  MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET,
+  RESEND_API_KEY, RESEND_FROM_EMAIL,
+  MEILISEARCH_HOST, MEILISEARCH_ADMIN_KEY,
+  /* Mentom payment ───────────────────────────────────── */
+  MENTOM_API_KEY, MENTOM_TERMINAL_ID,
+  MENTOM_WEBHOOK_SECRET, MENTOM_CAPTURE, MENTOM_BASE_URL,
+  /* misc ──────────────────────────────────────────────── */
   SHOULD_DISABLE_ADMIN,
 } from "lib/constants"
 
-/* expose envs to process */
+/* bring .env vars into process.env ---------------------- */
 loadEnv(process.env.NODE_ENV, process.cwd())
 
-/* ---------------------------------------------------- */
-/* Payment providers (Stripe and/or Mentom)             */
-/* ---------------------------------------------------- */
-/** @type {Array<{resolve: string; id: string; options: any}>} */
+/* ─────────────────────────────────────────────────────── */
+/* Payment providers (✂️ Stripe deleted)                   */
+/* ─────────────────────────────────────────────────────── */
 const paymentProviders = []
-
-if (STRIPE_API_KEY && STRIPE_WEBHOOK_SECRET) {
-  paymentProviders.push({
-    resolve: "@medusajs/payment-stripe",
-    id: "stripe",
-    options: {
-      apiKey: STRIPE_API_KEY,
-      webhookSecret: STRIPE_WEBHOOK_SECRET,
-    },
-  })
-}
 
 if (MENTOM_API_KEY && MENTOM_TERMINAL_ID) {
   paymentProviders.push({
-    resolve: "./src/modules/providers/payment-mentom",
-    id: "mentom",
+    resolve: "./src/modules/providers/payment-mentom", // keep/stub this file
+    id     : "mentom",
     options: {
-      apiKey:        MENTOM_API_KEY,
-      terminalId:    Number(MENTOM_TERMINAL_ID),
+      apiKey       : MENTOM_API_KEY,
+      terminalId   : Number(MENTOM_TERMINAL_ID),
       webhookSecret: MENTOM_WEBHOOK_SECRET,
-      capture:       !!MENTOM_CAPTURE,   // true → Sale, false → Auth+Capture
-      baseUrl:       MENTOM_BASE_URL,    // e.g. sandbox URL
+      capture      : Boolean(MENTOM_CAPTURE),   // true → sale, false → auth+capture
+      baseUrl      : MENTOM_BASE_URL || undefined,
     },
   })
 }
 
-/* ---------------------------------------------------- */
-/* Medusa configuration                                 */
-/* ---------------------------------------------------- */
+/* ─────────────────────────────────────────────────────── */
+/* Final Medusa config                                    */
+/* ─────────────────────────────────────────────────────── */
 const medusaConfig = {
-  /* ── core ─────────────────────────────────────────── */
   projectConfig: {
-    databaseUrl: DATABASE_URL,
+    databaseUrl    : DATABASE_URL,
     databaseLogging: false,
-    redisUrl: REDIS_URL,
-    workerMode: WORKER_MODE,
+    redisUrl       : REDIS_URL,
+    workerMode     : WORKER_MODE,
     http: {
-      adminCors: ADMIN_CORS,
-      authCors:  AUTH_CORS,
-      storeCors: STORE_CORS,
-      jwtSecret: JWT_SECRET,
+      port        : Number(process.env.PORT || 9000),
+      adminCors   : ADMIN_CORS,
+      authCors    : AUTH_CORS,
+      storeCors   : STORE_CORS,
+      jwtSecret   : JWT_SECRET,
       cookieSecret: COOKIE_SECRET,
     },
   },
 
-  admin: {
-    backendUrl: BACKEND_URL,
-    disable: SHOULD_DISABLE_ADMIN,
-  },
+  admin: { backendUrl: BACKEND_URL, disable: SHOULD_DISABLE_ADMIN },
 
-  /* ── modules ──────────────────────────────────────── */
   modules: [
-    /* File storage: MinIO or local */
+    /* File storage (MinIO ⇢ custom adapter, else local) */
     {
-      key: Modules.FILE,
+      key    : Modules.FILE,
       resolve: "@medusajs/file",
       options: {
         providers: MINIO_ENDPOINT && MINIO_ACCESS_KEY && MINIO_SECRET_KEY
-          ? [
-              {
-                resolve: "./src/modules/minio-file",
-                id: "minio",
-                options: {
-                  endPoint:  MINIO_ENDPOINT,
-                  accessKey: MINIO_ACCESS_KEY,
-                  secretKey: MINIO_SECRET_KEY,
-                  bucket:    MINIO_BUCKET,
-                },
+          ? [{
+              resolve: "./src/modules/minio-file", id: "minio",
+              options: {
+                endPoint : MINIO_ENDPOINT,
+                accessKey: MINIO_ACCESS_KEY,
+                secretKey: MINIO_SECRET_KEY,
+                bucket   : MINIO_BUCKET,
               },
-            ]
-          : [
-              {
-                resolve: "@medusajs/file-local",
-                id: "local",
-                options: {
-                  upload_dir: "static",
-                  backend_url: `${BACKEND_URL}/static`,
-                },
+            }]
+          : [{
+              resolve: "@medusajs/file-local", id: "local",
+              options: {
+                upload_dir : "static",
+                backend_url: `${BACKEND_URL}/static`,
               },
-            ],
+            }],
       },
     },
 
-    /* Event bus & workflow (only if Redis is configured) */
-    ...(REDIS_URL
-      ? [
-          {
-            key: Modules.EVENT_BUS,
-            resolve: "@medusajs/event-bus-redis",
-            options: { redisUrl: REDIS_URL },
-          },
-          {
-            key: Modules.WORKFLOW_ENGINE,
-            resolve: "@medusajs/workflow-engine-redis",
-            options: { redis: { url: REDIS_URL } },
-          },
-        ]
-      : []),
+    /* Event-bus & workflows only when Redis is set */
+    ...(REDIS_URL ? [
+      { key: Modules.EVENT_BUS,      resolve: "@medusajs/event-bus-redis",      options: { redisUrl: REDIS_URL } },
+      { key: Modules.WORKFLOW_ENGINE,resolve: "@medusajs/workflow-engine-redis",options: { redis: { url: REDIS_URL } } },
+    ] : []),
 
-    /* Notifications via Resend (if keys present) */
-    ...(RESEND_API_KEY && RESEND_FROM_EMAIL
-      ? [
-          {
-            key: Modules.NOTIFICATION,
-            resolve: "@medusajs/notification",
-            options: {
-              providers: [
-                {
-                  resolve: "./src/modules/email-notifications",
-                  id: "resend",
-                  options: {
-                    channels: ["email"],
-                    api_key:  RESEND_API_KEY,
-                    from:     RESEND_FROM_EMAIL,
-                  },
-                },
-              ],
-            },
-          },
-        ]
-      : []),
+    /* Email via Resend (optional) */
+    ...(RESEND_API_KEY && RESEND_FROM_EMAIL ? [
+      {
+        key    : Modules.NOTIFICATION,
+        resolve: "@medusajs/notification",
+        options: {
+          providers: [{
+            resolve: "./src/modules/email-notifications", id: "resend",
+            options: { channels: ["email"], api_key: RESEND_API_KEY, from: RESEND_FROM_EMAIL },
+          }],
+        },
+      },
+    ] : []),
 
-    /* Payments (Stripe, Mentom …) */
-    ...(paymentProviders.length
-      ? [
-          {
-            key: Modules.PAYMENT,
-            resolve: "@medusajs/payment",
-            options: { providers: paymentProviders },
-          },
-        ]
-      : []),
+    /* Mentom payment (only if vars present) */
+    ...(paymentProviders.length ? [{
+      key    : Modules.PAYMENT,
+      resolve: "@medusajs/payment",
+      options: { providers: paymentProviders },
+    }] : []),
   ],
 
-  /* ── plugins ──────────────────────────────────────── */
   plugins: [
-    ...(MEILISEARCH_HOST && MEILISEARCH_ADMIN_KEY
-      ? [
-          {
-            resolve: "@rokmohar/medusa-plugin-meilisearch",
-            options: {
-              config: { host: MEILISEARCH_HOST, apiKey: MEILISEARCH_ADMIN_KEY },
-              settings: {
-                products: {
-                  indexSettings: {
-                    searchableAttributes: [
-                      "title",
-                      "description",
-                      "variant_sku",
-                    ],
-                    displayedAttributes: [
-                      "id",
-                      "title",
-                      "description",
-                      "variant_sku",
-                      "thumbnail",
-                      "handle",
-                    ],
-                  },
-                  primaryKey: "id",
-                },
-              },
+    ...(MEILISEARCH_HOST && MEILISEARCH_ADMIN_KEY ? [{
+      resolve: "@rokmohar/medusa-plugin-meilisearch",
+      options: {
+        config  : { host: MEILISEARCH_HOST, apiKey: MEILISEARCH_ADMIN_KEY },
+        settings: {
+          products: {
+            indexSettings: {
+              searchableAttributes: ["title", "description", "variant_sku"],
+              displayedAttributes : ["id","title","description","variant_sku","thumbnail","handle"],
             },
+            primaryKey: "id",
           },
-        ]
-      : []),
+        },
+      },
+    }] : []),
   ],
 }
 
-/* optional debug print */
-if (process.env.DEBUG_CONFIG) {
-  console.log(JSON.stringify(medusaConfig, null, 2))
-}
+/* DEBUG_CONFIG=1 will pretty-print the object on boot */
+if (process.env.DEBUG_CONFIG) console.log(JSON.stringify(medusaConfig, null, 2))
 
 export default defineConfig(medusaConfig)
