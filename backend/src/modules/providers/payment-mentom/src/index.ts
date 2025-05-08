@@ -1,4 +1,4 @@
-import MentomProviderService from "./src/services/mentom-provider"
+import MentomProviderService from "./services/mentom-provider"
 import { ModuleProvider, Modules } from "@medusajs/framework/utils"
 
 /**
