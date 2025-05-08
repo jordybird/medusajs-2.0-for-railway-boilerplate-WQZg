@@ -1,7 +1,7 @@
 {
   "name": "medusa-2.0-boilerplate-backend",
   "version": "0.0.2",
-  "description": "A Prebaked Medusa 2.0 backend",
+  "description": "A Pre-baked Medusa 2.0 backend",
   "author": "Rasmus Puls",
   "license": "MIT",
   "keywords": [
@@ -12,14 +12,17 @@
     "headless",
     "medusa"
   ],
+
   "scripts": {
-    "build": "medusa build && node src/scripts/postBuild.js",
+    "build:plugin": "tsc -p src/modules/providers/payment-mentom/tsconfig.json || true",
+    "build": "pnpm run build:plugin && medusa build && node src/scripts/postBuild.js",
     "seed": "medusa exec ./src/scripts/seed.ts",
     "ib": "init-backend",
     "start": "init-backend && cd .medusa/server && medusa start --verbose",
     "dev": "medusa develop",
     "email:dev": "email dev --dir=./src/modules/email-notifications/templates --port=3002"
   },
+
   "dependencies": {
     "@medusajs/admin-sdk": "latest",
     "@medusajs/cli": "latest",
@@ -27,7 +30,6 @@
     "@medusajs/framework": "latest",
     "@medusajs/medusa": "latest",
     "@medusajs/notification-sendgrid": "latest",
-    "@medusajs/payment-stripe": "latest",
     "@medusajs/workflow-engine-redis": "latest",
     "@mikro-orm/core": "6.4.3",
     "@mikro-orm/knex": "6.4.3",
@@ -43,8 +45,10 @@
     "minio": "^8.0.3",
     "pg": "^8.13.1",
     "resend": "4.0.1",
+    "ts-node": "^10.9.2",
     "ulid": "^2.3.0"
   },
+
   "devDependencies": {
     "@medusajs/test-utils": "latest",
     "@mikro-orm/cli": "6.4.3",
@@ -59,10 +63,10 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-email": "^3.0.4",
-    "ts-node": "^10.9.2",
     "typescript": "^5.7.2",
     "vite": "^5.4.11"
   },
+
   "packageManager": "pnpm@9.10.0",
   "engines": {
     "node": "22.x",
