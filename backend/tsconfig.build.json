@@ -1,11 +1,23 @@
+// backend/tsconfig.build.json
 {
     "extends": "./tsconfig.json",
+  
     "compilerOptions": {
-      "outDir": "dist-provider",              // where compiled JS will land
-      "rootDir": "src/modules/providers/payment-mentom/src",
+      // compile everything under the provider folder
+      "rootDir": "src/modules/providers/payment-mentom",
+      "outDir":  "dist-provider",
+  
+      /* no .d.ts files – Medusa never imports the TS directly               */
       "declaration": false,
       "emitDeclarationOnly": false
     },
-    "include": ["src/modules/providers/payment-mentom/src/**/*"]
+  
+    "include": [
+      // the runtime shim that chooses dist vs ts-node
+      "src/modules/providers/payment-mentom/index.ts",
+  
+      // the actual Mentom provider sources
+      "src/modules/providers/payment-mentom/src/**/*"
+    ]
   }
   
