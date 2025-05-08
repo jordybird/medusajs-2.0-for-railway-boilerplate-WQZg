@@ -1,51 +1,36 @@
-"use client";
+/* storefront/src/modules/account/components/profile-id-verification/index.tsx */
+"use client"
 
-import { useState } from "react";
-import { HttpTypes } from "@medusajs/types";
-import AccountInfo from "../account-info";
+import { usePathname, useRouter } from "next/navigation"
+import { HttpTypes } from "@medusajs/types"
+import AccountInfo   from "../account-info"
+import { isIdVerified } from "@lib/util/customer-flags"
 
-type Props = { customer: HttpTypes.StoreCustomer };
+type Props = { customer: HttpTypes.StoreCustomer }
 
 export default function ProfileIDVerification({ customer }: Props) {
-  const isVerified = customer.metadata?.identity_verified === true;
-  const [launching, setLaunching] = useState(false);
+  const router    = useRouter()
+  const pathname  = usePathname()                  // e.g. /us/account/profile
+  const ccPrefix  = pathname.split("/")[1]         // "us" | "de" | …
 
-  async function startBlueCheck() {
-    console.log("ID-verify button clicked");
-    setLaunching(true);
+  const verified  = isIdVerified(customer)
 
-    try {
-      const res = await fetch("/api/bluecheck/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerId: customer.id,
-          email: customer.email, // optional pre-fill
-        }),
-      });
-
-      if (!res.ok) throw new Error(`Backend ${res.status}`);
-
-      const { link } = (await res.json()) as { link: string };
-      window.location.assign(link); // 🔗 off to BlueCheck
-    } catch (e) {
-      console.error("BlueCheck start failed:", e);
-      alert("Unable to start ID verification. Please try again.");
-      setLaunching(false);
-    }
+  /** identical flow to cart CTA, returns to /account/profile */
+  const startVerify = () => {
+    const url =
+      `/${ccPrefix}/verify-id?return_to=${encodeURIComponent(`/account/profile`)}`
+    router.push(url, { scroll: false })
   }
 
+  /* —— RETURN (unchanged, no country logic here) —— */
   return (
     <AccountInfo
       label="ID verification"
-      currentInfo={isVerified ? "Verified" : "Not verified"}
-      isSuccess={isVerified}
-      isError={false}
+      currentInfo={verified ? "Verified" : "Not verified"}
+      isSuccess={verified}
       clearState={() => null}
-      actionLabel={isVerified ? "Edit" : "Add"}
-      onAction={isVerified ? undefined : startBlueCheck}
-    >
-      {/* we don’t render children; AccountInfo handles the button */}
-    </AccountInfo>
-  );
+      actionLabel={verified ? "Edit" : "Add"}
+      onAction={verified ? undefined : startVerify}
+    />
+  )
 }

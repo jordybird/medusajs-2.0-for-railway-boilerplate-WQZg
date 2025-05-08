@@ -1,27 +1,45 @@
-const Radio = ({ checked, 'data-testid': dataTestId }: { checked: boolean, 'data-testid'?: string }) => {
-  return (
-    <>
-      <button
-        type="button"
-        role="radio"
-        aria-checked="true"
-        data-state={checked ? "checked" : "unchecked"}
-        className="group relative flex h-5 w-5 items-center justify-center outline-none"
-        data-testid={dataTestId || 'radio-button'}
-      >
-        <div className="shadow-borders-base group-hover:shadow-borders-strong-with-shadow bg-ui-bg-base group-data-[state=checked]:bg-ui-bg-interactive group-data-[state=checked]:shadow-borders-interactive group-focus:!shadow-borders-interactive-with-focus group-disabled:!bg-ui-bg-disabled group-disabled:!shadow-borders-base flex h-[14px] w-[14px] items-center justify-center rounded-full transition-all">
-          {checked && (
-            <span
-              data-state={checked ? "checked" : "unchecked"}
-              className="group flex items-center justify-center"
-            >
-              <div className="bg-ui-bg-base shadow-details-contrast-on-bg-interactive group-disabled:bg-ui-fg-disabled rounded-full group-disabled:shadow-none h-1.5 w-1.5"></div>
-            </span>
-          )}
-        </div>
-      </button>
-    </>
-  )
+import React from "react"
+import { clx } from "@medusajs/ui"
+
+interface RadioProps {
+  checked: boolean
+  "data-testid"?: string
 }
+
+/**
+ * Final polish: radio / checkbox that is **always** visible
+ * Light  – white fill, gray-400 border, brand-coloured dot
+ * Dark   – transparent fill, **white border**, white dot
+ */
+const Radio: React.FC<RadioProps> = ({ checked, "data-testid": id }) => (
+  <button
+    type="button"
+    role="radio"
+    aria-checked={checked}
+    data-state={checked ? "checked" : "unchecked"}
+    className="relative inline-flex h-5 w-5 items-center justify-center focus:outline-none"
+    data-testid={id || "radio-button"}
+  >
+    {/* outer ring */}
+    <span
+      className={clx(
+        "transition-colors flex items-center justify-center h-4 w-4 rounded-sm border",
+        "bg-white border-gray-400",               /* light */
+        "dark:bg-transparent dark:border-white"   /* dark  */
+      )}
+    >
+      {/* inner dot */}
+      {checked && (
+        <span
+          className={clx(
+            "h-2.5 w-2.5 rounded-sm",
+            "bg-ui-fg-interactive",               /* light */
+            "dark:bg-white"                       /* dark  */
+          )}
+        />
+      )}
+    </span>
+  </button>
+)
 
 export default Radio
