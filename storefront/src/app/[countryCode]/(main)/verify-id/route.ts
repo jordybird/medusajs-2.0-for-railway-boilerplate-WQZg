@@ -48,7 +48,7 @@ export async function GET(
     const payload: Record<string, any> = {
       external_id: customer?.id ?? crypto.randomUUID(),
       return_url:       returnURL,
-      notification_url: `${BACKEND}/api/webhooks/bluecheck`,
+      notification_url: `${BACKEND}/webhooks/bluecheck`,
       type: "photo_id",
     }
 
