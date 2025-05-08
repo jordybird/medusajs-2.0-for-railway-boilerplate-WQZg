@@ -51,7 +51,7 @@ const medusaConfig = {
     redisUrl       : REDIS_URL,
     workerMode     : WORKER_MODE,
     http: {
-      port        : Number(process.env.PORT || 9000),
+      port        : Number(process.env.PORT || 8080),
       adminCors   : ADMIN_CORS,
       authCors    : AUTH_CORS,
       storeCors   : STORE_CORS,
