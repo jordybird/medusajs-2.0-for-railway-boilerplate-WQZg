@@ -1,0 +1,11 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+      "outDir": "dist-provider",              // where compiled JS will land
+      "rootDir": "src/modules/providers/payment-mentom/src",
+      "declaration": false,
+      "emitDeclarationOnly": false
+    },
+    "include": ["src/modules/providers/payment-mentom/src/**/*"]
+  }
+  

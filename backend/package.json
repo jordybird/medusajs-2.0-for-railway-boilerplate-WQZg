@@ -1,25 +1,31 @@
 {
   "name": "medusa-2.0-boilerplate-backend",
-  "version": "0.0.2",
-  "description": "A Pre-baked Medusa 2.0 backend",
+  "version": "0.0.3",
+  "description": "Opinion-ated Medusa 2 backend with Mentom payments",
   "author": "Rasmus Puls",
   "license": "MIT",
   "keywords": [
-    "sqlite",
+    "medusa",
+    "headless-commerce",
+    "mentom",
     "postgres",
-    "typescript",
-    "ecommerce",
-    "headless",
-    "medusa"
+    "typescript"
   ],
 
   "scripts": {
-    "build:plugin": "tsc -p src/modules/providers/payment-mentom/tsconfig.json || true",
-    "build": "pnpm run build:plugin && medusa build && node src/scripts/postBuild.js",
+  
+    "build:provider": "tsc -p tsconfig.build.json",
+    "build": "pnpm run build:provider && medusa build && node src/scripts/postBuild.js",
+
+   
     "seed": "medusa exec ./src/scripts/seed.ts",
     "ib": "init-backend",
+
+  
     "start": "init-backend && cd .medusa/server && medusa start --verbose",
     "dev": "medusa develop",
+
+   
     "email:dev": "email dev --dir=./src/modules/email-notifications/templates --port=3002"
   },
 
@@ -31,13 +37,17 @@
     "@medusajs/medusa": "latest",
     "@medusajs/notification-sendgrid": "latest",
     "@medusajs/workflow-engine-redis": "latest",
+
     "@mikro-orm/core": "6.4.3",
     "@mikro-orm/knex": "6.4.3",
     "@mikro-orm/migrations": "6.4.3",
     "@mikro-orm/postgresql": "6.4.3",
+
     "@react-email/components": "^0.0.26",
     "@rokmohar/medusa-plugin-meilisearch": "^1.0.3",
+
     "@sendgrid/mail": "^8.1.5",
+
     "awilix": "^8.0.1",
     "axios": "^1.9.0",
     "express": "^4.21.2",
@@ -45,24 +55,32 @@
     "minio": "^8.0.3",
     "pg": "^8.13.1",
     "resend": "4.0.1",
+
+   
     "ts-node": "^10.9.2",
+
     "ulid": "^2.3.0"
   },
 
   "devDependencies": {
     "@medusajs/test-utils": "latest",
     "@mikro-orm/cli": "6.4.3",
+
     "@swc/core": "1.5.7",
     "@swc/jest": "^0.2.37",
+
     "@types/jest": "^29.5.14",
     "@types/node": "^20.17.10",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
+
     "jest": "^29.7.0",
     "prop-types": "^15.8.1",
+
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-email": "^3.0.4",
+
     "typescript": "^5.7.2",
     "vite": "^5.4.11"
   },
