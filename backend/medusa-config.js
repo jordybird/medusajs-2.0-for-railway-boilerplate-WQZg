@@ -36,7 +36,7 @@ if (MENTOM_API_KEY && MENTOM_TERMINAL_ID) {
     baseUrl: MENTOM_BASE_URL || undefined,
   });
   paymentProviders.push({
-    resolve: "./src/modules/providers/payment-mentom/index.ts", // Point directly to the index.ts file
+    resolve: "./modules/providers/payment-mentom/index.js", // Path to the compiled plugin entry point after postBuild.js
     id     : "mentom",
     options: {
       apiKey       : MENTOM_API_KEY,
