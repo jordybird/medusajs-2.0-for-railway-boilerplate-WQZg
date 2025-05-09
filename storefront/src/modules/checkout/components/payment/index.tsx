@@ -53,31 +53,72 @@ const Payment = ({
     try {
       if (isMentom(selected)) {
         // Handle Mentom Hosted Form redirection
-        const response = await fetch("/api/store/mentom-hosted-form", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            amount: cart.total, // Use cart total as amount
-            externalId: cart.id, // Use cart ID as externalId
-            returnUrl: `${window.location.origin}/${cart.region.country_code}/checkout/mentom-return`, // Placeholder return URL
-            // Add any other required Hosted Form parameters here
-          }),
-        });
+        // Handle Mentom Hosted Form redirection
+        try {
+          const response = await fetch("/api/store/mentom-hosted-form", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              amount: cart.total, // Use cart total as amount
+              externalId: cart.id, // Use cart ID as externalId
+              returnUrl: `${window.location.origin}/${cart.region.country_code}/checkout/mentom-return`, // Placeholder return URL
+              // Add any other required Hosted Form parameters here
+            }),
+          });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to generate Hosted Form URL");
+          if (!response.ok) {
+            let errorResponseMessage = "Failed to generate Hosted Form URL";
+            try {
+              // Try to parse as JSON first, as intended
+              const errorData = await response.json();
+              errorResponseMessage = errorData.message || errorResponseMessage;
+            } catch (jsonError) {
+              // If JSON parsing fails, try to get the response as text
+              console.error("Failed to parse error response as JSON:", jsonError);
+              try {
+                const textResponse = await response.text();
+                console.error("Raw error response from server:", textResponse);
+                errorResponseMessage = `Received non-JSON response from server. Check console for details. Status: ${response.status}`;
+              } catch (textError) {
+                console.error("Failed to get error response as text:", textError);
+                errorResponseMessage = `Failed to process error response. Status: ${response.status}`;
+              }
+            }
+            throw new Error(errorResponseMessage);
+          }
+
+          // If response.ok is true, but .json() still fails
+          let data;
+          try {
+            data = await response.json();
+          } catch (jsonError) {
+            console.error("Failed to parse successful response as JSON:", jsonError);
+            // let textResponse = ""; // textResponse already declared in outer scope if !response.ok path was taken
+            try {
+              // We need to clone the response to read it as text after attempting json()
+              // because the body can only be consumed once.
+              const clonedResponse = response.clone(); 
+              const textResponse = await clonedResponse.text(); // Declare textResponse here if not in !response.ok path
+              console.error("Raw successful response (that failed JSON parsing):", textResponse);
+              throw new Error("Received non-JSON success response from server. Check console.");
+            } catch (textError) {
+              console.error("Failed to get successful response as text after JSON parse failure:", textError);
+              throw new Error("Failed to parse/read successful response from server. Check console.");
+            }
+          }
+
+          const { url } = data;
+          if (url) {
+            window.location.href = url; // Redirect to Mentom Hosted Form
+          } else {
+            throw new Error("Hosted Form URL not received.");
+          }
+        } catch (e: any) { // Catch errors specific to Mentom flow
+          setError(e.message ?? "Unknown error in Mentom flow");
+          console.error("Error in handleSubmit (Mentom flow):", e);
         }
-
-        const { url } = await response.json();
-        if (url) {
-          window.location.href = url; // Redirect to Mentom Hosted Form
-        } else {
-          throw new Error("Hosted Form URL not received.");
-        }
-
       } else {
         // Existing logic for other payment providers
         if (!activeSession) {
@@ -85,8 +126,9 @@ const Payment = ({
         }
         goNext();
       }
-    } catch (e: any) {
+    } catch (e: any) { // General catch for the whole handleSubmit
       setError(e.message ?? "Unknown error");
+      console.error("Error in handleSubmit (General):", e);
     } finally {
       setIsLoading(false);
     }
