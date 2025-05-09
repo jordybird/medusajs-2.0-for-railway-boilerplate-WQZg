@@ -30,3 +30,35 @@ execSync('pnpm i --prod --frozen-lockfile', {
   cwd: MEDUSA_SERVER_PATH,
   stdio: 'inherit'
 });
+
+// --- BEGIN: Copy custom provider ---
+const providerSourceDir = path.join(process.cwd(), 'dist-provider');
+const providerDestDir = path.join(MEDUSA_SERVER_PATH, 'modules', 'providers', 'payment-mentom');
+
+if (fs.existsSync(providerSourceDir)) {
+  console.log(`Copying custom provider from ${providerSourceDir} to ${providerDestDir}...`);
+  // Ensure destination directory exists
+  fs.mkdirSync(providerDestDir, { recursive: true });
+
+  // Function to recursively copy directory contents
+  function copyDirRecursiveSync(source, target) {
+    const files = fs.readdirSync(source);
+    files.forEach((file) => {
+      const sourcePath = path.join(source, file);
+      const targetPath = path.join(target, file);
+      const stat = fs.lstatSync(sourcePath);
+      if (stat.isDirectory()) {
+        fs.mkdirSync(targetPath, { recursive: true });
+        copyDirRecursiveSync(sourcePath, targetPath);
+      } else {
+        fs.copyFileSync(sourcePath, targetPath);
+      }
+    });
+  }
+
+  copyDirRecursiveSync(providerSourceDir, providerDestDir);
+  console.log('Custom provider copied successfully.');
+} else {
+  console.warn(`Warning: dist-provider directory not found at ${providerSourceDir}. Custom provider not copied.`);
+}
+// --- END: Copy custom provider ---
