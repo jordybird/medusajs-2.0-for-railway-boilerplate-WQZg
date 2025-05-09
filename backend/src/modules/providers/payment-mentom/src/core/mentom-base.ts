@@ -90,10 +90,10 @@ export default abstract class MentomBase extends AbstractPaymentProvider<MentomO
 
     // this.options_ = options; // This line is likely redundant as AbstractPaymentProvider's constructor should set this.options_
     this.client_ = axios.create({
-      baseURL: options.baseUrl?.replace(/\/+$/, "") ?? "https://gateway.mentomdashboard.com",
+      baseURL: this.options_.baseUrl?.replace(/\/+$/, "") ?? "https://gateway.mentomdashboard.com",
       timeout: 15_000,
       headers: {
-        Authorization: `Bearer ${options.apiKey}`,
+        Authorization: `Bearer ${this.options_.apiKey}`,
         "Content-Type": "application/json",
       },
     })
