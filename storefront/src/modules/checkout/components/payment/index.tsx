@@ -51,16 +51,46 @@ const Payment = ({
     setIsLoading(true)
     setError(null)
     try {
-      if (!activeSession) {
-        await initiatePaymentSession(cart, { provider_id: selected })
+      if (isMentom(selected)) {
+        // Handle Mentom Hosted Form redirection
+        const response = await fetch("/api/store/mentom-hosted-form", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            amount: cart.total, // Use cart total as amount
+            externalId: cart.id, // Use cart ID as externalId
+            returnUrl: `${window.location.origin}/${cart.region.country_code}/checkout/mentom-return`, // Placeholder return URL
+            // Add any other required Hosted Form parameters here
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to generate Hosted Form URL");
+        }
+
+        const { url } = await response.json();
+        if (url) {
+          window.location.href = url; // Redirect to Mentom Hosted Form
+        } else {
+          throw new Error("Hosted Form URL not received.");
+        }
+
+      } else {
+        // Existing logic for other payment providers
+        if (!activeSession) {
+          await initiatePaymentSession(cart, { provider_id: selected });
+        }
+        goNext();
       }
-      goNext()
     } catch (e: any) {
-      setError(e.message ?? "Unknown error")
+      setError(e.message ?? "Unknown error");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   /* UI ---------------------------------------------------------------- */
   return (
