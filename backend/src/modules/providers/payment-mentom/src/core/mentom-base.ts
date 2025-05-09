@@ -58,21 +58,37 @@ export default abstract class MentomBase extends AbstractPaymentProvider<MentomO
 
   constructor(container: Record<string, unknown>, options: MentomOptions) {
     // @ts-ignore  Medusa DI signature
-    super(...arguments)
-    console.log("[MENTOM_PLUGIN] MentomBase constructor called. Raw options received:", JSON.stringify(options, null, 2));
+    // Log options IMMEDIATELY upon entry
+    console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    console.log("[MENTOM_PLUGIN] RAW ENTRY MentomBase constructor. Options type:", typeof options);
     try {
-      console.log("[MENTOM_PLUGIN] MentomBase: Attempting to call validateOptions.");
-      MentomBase.validateOptions(options);
-      console.log("[MENTOM_PLUGIN] MentomBase: options validated successfully.");
+      console.log("[MENTOM_PLUGIN] RAW ENTRY MentomBase constructor. Options (stringified):", JSON.stringify(options, null, 2));
+    } catch (stringifyError) {
+      console.error("[MENTOM_PLUGIN] RAW ENTRY MentomBase constructor. FAILED TO STRINGIFY OPTIONS:", stringifyError.message);
+      console.log("[MENTOM_PLUGIN] RAW ENTRY MentomBase constructor. Options (raw inspect):", options); // Fallback log
+    }
+    console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
+    // @ts-ignore Medusa's DI and AbstractPaymentProvider might expect this pattern
+    super(...arguments); // Call to AbstractPaymentProvider constructor
+    console.log("[MENTOM_PLUGIN] MentomBase constructor: super() called. Now processing options internally.");
+    // this.options_ is typically set by the AbstractPaymentProvider's constructor via super(container, options)
+    console.log("[MENTOM_PLUGIN] MentomBase constructor: Internal this.options_ (after super):", JSON.stringify(this.options_, null, 2));
+    console.log("[MENTOM_PLUGIN] MentomBase constructor: Argument 'options' (after super):", JSON.stringify(options, null, 2));
+
+    try {
+      console.log("[MENTOM_PLUGIN] MentomBase: Attempting to call validateOptions with internal this.options_.");
+      MentomBase.validateOptions(this.options_); // Validate this.options_ as set by super()
+      console.log("[MENTOM_PLUGIN] MentomBase: this.options_ validated successfully.");
     } catch (e) {
       console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-      console.error("[MENTOM_PLUGIN] CRITICAL: MentomBase options validation FAILED:", e.message);
+      console.error("[MENTOM_PLUGIN] CRITICAL: MentomBase options validation FAILED (using this.options_):", e.message);
       console.error("[MENTOM_PLUGIN] CRITICAL: Error Stack:", e.stack);
       console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
       throw e; // Re-throw to ensure Medusa handles the plugin load failure
     }
 
-    this.options_ = options
+    // this.options_ = options; // This line is likely redundant as AbstractPaymentProvider's constructor should set this.options_
     this.client_ = axios.create({
       baseURL: options.baseUrl?.replace(/\/+$/, "") ?? "https://gateway.mentomdashboard.com",
       timeout: 15_000,
