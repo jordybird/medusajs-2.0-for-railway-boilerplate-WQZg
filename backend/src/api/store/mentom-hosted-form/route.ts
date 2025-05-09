@@ -3,7 +3,7 @@ import axios from "axios";
 export async function POST(req, res) {
   try {
     // Get Mentom options from Medusa configuration
-    const mentomOptions = req.scope.resolve("mentomPaymentProviderOptions");
+    const mentomOptions = req.scope.resolve("mentomOptions");
     const { apiKey, terminalId, baseUrl } = mentomOptions;
 
     // Extract necessary data from the request body (sent from storefront)
