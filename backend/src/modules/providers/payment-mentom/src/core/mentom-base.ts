@@ -90,17 +90,22 @@ export default abstract class MentomBase extends AbstractPaymentProvider<MentomO
   async initiatePayment(
     { amount, data, context }: InitiatePaymentInput
   ): Promise<InitiatePaymentOutput> {
-    const extra =
-      data && typeof (data as any).raw_body === "object"
-        ? ((data as any).raw_body as Record<string, unknown>)
-        : {}
-
+    const rawBody = (data as any).raw_body
+    if (!rawBody || typeof rawBody !== "object") {
+      throw new Error("Mentom provider: missing payment details in raw_body. Card and IP details are required.")
+    }
+    const { card, ip, source: src, level: lv, ...rest } = rawBody as Record<string, any>
+    if (!card || !card.number || !card.exp || !card.cvv) {
+      throw new Error("Mentom provider: missing required card fields (number, exp, cvv)")
+    }
     const body = {
       terminal: { id: this.options_.terminalId },
       amount,
-      source: "Internet",
-      level: 1,
-      ...extra,
+      source: src ?? "Internet",
+      level: lv ?? 1,
+      card,
+      ip,
+      ...rest,
     }
 
     const path = this.options_.capture ? "/payment/sale" : "/payment/auth"
