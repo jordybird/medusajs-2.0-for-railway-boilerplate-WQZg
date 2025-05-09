@@ -38,20 +38,37 @@ export default abstract class MentomBase extends AbstractPaymentProvider<MentomO
   /*  Validation & Axios                         */
   /* ─────────────────────────────────────────── */
   static validateOptions(o: MentomOptions): void {
-    console.log("[MENTOM_PLUGIN] MentomBase.validateOptions called with:", o);
-    if (!isDefined(o.apiKey)) throw new Error("Mentom provider: apiKey missing")
-    if (!isDefined(o.terminalId)) throw new Error("Mentom provider: terminalId missing")
+    console.log("[MENTOM_PLUGIN] MentomBase.validateOptions: Validating options. Stringified:", JSON.stringify(o, null, 2));
+    if (!isDefined(o.apiKey) || o.apiKey === "") {
+      console.error("[MENTOM_PLUGIN] MentomBase.validateOptions: apiKey is missing or empty.");
+      throw new Error("Mentom provider: apiKey missing or empty");
+    }
+    console.log("[MENTOM_PLUGIN] MentomBase.validateOptions: apiKey check passed.");
+    if (!isDefined(o.terminalId)) {
+      console.error("[MENTOM_PLUGIN] MentomBase.validateOptions: terminalId is not defined.");
+      throw new Error("Mentom provider: terminalId missing");
+    }
+    if (typeof o.terminalId !== 'number' || isNaN(o.terminalId)) {
+       console.error("[MENTOM_PLUGIN] MentomBase.validateOptions: terminalId is not a valid number. Value:", o.terminalId);
+       throw new Error("Mentom provider: terminalId is not a valid number.");
+    }
+    console.log("[MENTOM_PLUGIN] MentomBase.validateOptions: terminalId check passed.");
+    console.log("[MENTOM_PLUGIN] MentomBase.validateOptions: All checks passed.");
   }
 
   constructor(container: Record<string, unknown>, options: MentomOptions) {
     // @ts-ignore  Medusa DI signature
     super(...arguments)
-    console.log("[MENTOM_PLUGIN] MentomBase constructor. Initializing with options:", options);
+    console.log("[MENTOM_PLUGIN] MentomBase constructor called. Raw options received:", JSON.stringify(options, null, 2));
     try {
+      console.log("[MENTOM_PLUGIN] MentomBase: Attempting to call validateOptions.");
       MentomBase.validateOptions(options);
-      console.log("[MENTOM_PLUGIN] MentomBase options validated successfully.");
+      console.log("[MENTOM_PLUGIN] MentomBase: options validated successfully.");
     } catch (e) {
-      console.error("[MENTOM_PLUGIN] MentomBase options validation failed:", e.message, e.stack);
+      console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+      console.error("[MENTOM_PLUGIN] CRITICAL: MentomBase options validation FAILED:", e.message);
+      console.error("[MENTOM_PLUGIN] CRITICAL: Error Stack:", e.stack);
+      console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
       throw e; // Re-throw to ensure Medusa handles the plugin load failure
     }
 
