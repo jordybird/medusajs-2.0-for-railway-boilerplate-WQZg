@@ -1,6 +1,6 @@
 // Removed import for MedusaRequest, MedusaResponse as it was causing issues.
 // We'll use untyped req, res for now for the minimal diagnostic handlers.
-console.log("[MENTOM_ROUTE] /api/store/mentom-hosted-form/route.ts file loaded by Medusa.");
+// Removed top-level console.log as a diagnostic step.
 
 export const POST = async (req, res) => {
   console.log("[MENTOM_ROUTE_MINIMAL] POST /api/store/mentom-hosted-form handler called (minimal test).");
