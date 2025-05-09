@@ -35,7 +35,7 @@ if (MENTOM_API_KEY && MENTOM_TERMINAL_ID) {
       apiKey       : MENTOM_API_KEY,
       terminalId   : Number(MENTOM_TERMINAL_ID),
       webhookSecret: MENTOM_WEBHOOK_SECRET,
-      capture      : Boolean(MENTOM_CAPTURE),   // true → sale, false → auth+capture
+      capture      : MENTOM_CAPTURE === 'true',   // Correctly interpret "true" or "false" string
       baseUrl      : MENTOM_BASE_URL || undefined,
     },
   })
