@@ -11,6 +11,17 @@ checkEnvVariables()
 const nextConfig = {
   reactStrictMode: true,
 
+  async rewrites() {
+    return [
+      {
+        // Ensure NEXT_PUBLIC_MEDUSA_BACKEND_URL is set to your Medusa backend's URL
+        // e.g., https://your-medusa-backend.up.railway.app
+        source: "/api/:path*",
+        destination: `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/api/:path*`,
+      },
+    ];
+  },
+
   // Skip lint/TS errors during CI builds (optional)
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },

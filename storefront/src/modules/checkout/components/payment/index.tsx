@@ -70,6 +70,7 @@ const Payment = ({
 
           if (!response.ok) {
             let errorResponseMessage = "Failed to generate Hosted Form URL";
+            const clonedResponseForErrorText = response.clone(); // Clone for text reading
             try {
               // Try to parse as JSON first, as intended
               const errorData = await response.json();
@@ -78,7 +79,7 @@ const Payment = ({
               // If JSON parsing fails, try to get the response as text
               console.error("Failed to parse error response as JSON:", jsonError);
               try {
-                const textResponse = await response.text();
+                const textResponse = await clonedResponseForErrorText.text(); // Use the clone
                 console.error("Raw error response from server:", textResponse);
                 errorResponseMessage = `Received non-JSON response from server. Check console for details. Status: ${response.status}`;
               } catch (textError) {
