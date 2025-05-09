@@ -1,2 +1,7 @@
-export { default as MentomBase } from "./core/mentom-base";
-export { default as MentomProviderService } from "./services/mentom-provider";
+import MentomProviderService from "./services/mentom-provider";
+
+// The main module export for Medusa.
+// Medusa typically looks for a 'services' array.
+export default {
+  services: [MentomProviderService],
+};
