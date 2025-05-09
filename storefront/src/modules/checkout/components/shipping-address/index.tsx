@@ -60,15 +60,31 @@ const ShippingAddress = ({
   }
 
   useEffect(() => {
-    // Ensure cart is not null and has a shipping_address before setting form data
-    if (cart && cart.shipping_address) {
-      setFormAddress(cart?.shipping_address, cart?.email)
+    if (cart?.shipping_address) {
+      setFormAddress(cart.shipping_address, cart.email);
+    } else if (customer) {
+      // If cart has no shipping address, try to use customer's default or first address
+      const customerAddresses = Array.isArray(customer.addresses) ? customer.addresses : [];
+      const defaultShippingAddress = customerAddresses.find(
+        (addr: HttpTypes.StoreCustomerAddress) => addr.is_default_shipping // Changed to HttpTypes.StoreCustomerAddress
+      ) || customerAddresses[0];
+      
+      if (defaultShippingAddress) {
+        // Cast to StoreCartAddress, as setFormAddress expects it.
+        // The fields used by setFormAddress should be common.
+        setFormAddress(defaultShippingAddress as unknown as HttpTypes.StoreCartAddress, customer.email);
+      } else {
+        // If no default/first customer address, just set email if available
+        setFormAddress(undefined, customer.email);
+      }
+    } else if (cart?.email) {
+        // If no customer but cart has email (e.g. guest checkout started)
+        setFormAddress(undefined, cart.email);
     }
-
-    if (cart && !cart.email && customer?.email) {
-      setFormAddress(undefined, customer.email)
-    }
-  }, [cart]) // Add cart as a dependency
+    // Ensure formData is initialized if none of the above conditions are met,
+    // to prevent uncontrolled components if cart and customer are initially null.
+    // This might already be handled by useState({}) default.
+  }, [cart, customer]); // Added customer to dependency array
 
   const handleChange = (
     e: React.ChangeEvent<
