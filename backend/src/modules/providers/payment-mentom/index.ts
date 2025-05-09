@@ -9,7 +9,7 @@ let mod: unknown
 try {
   // ⬅️ production build – dist/index.js exists
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  mod = require("./dist/index.js")
+  mod = require("./src/index.js") // Corrected path for compiled code in Medusa build output
 } catch {
   // ⬅️ local dev / CI – fall back to ts-node
   // eslint-disable-next-line @typescript-eslint/no-var-requires
