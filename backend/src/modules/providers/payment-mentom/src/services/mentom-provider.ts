@@ -8,7 +8,9 @@ import { PaymentProviderKeys } from "../types"
 class MentomProviderService extends MentomBase {
   static identifier = PaymentProviderKeys.MENTOM
   constructor(container, options) {
+    console.log("[MENTOM_PLUGIN] MentomProviderService constructor called. Options received:", options);
     super(container, options)
+    console.log("[MENTOM_PLUGIN] MentomProviderService super(container, options) called.");
   }
 }
 

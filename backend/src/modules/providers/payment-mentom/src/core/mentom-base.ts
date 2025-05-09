@@ -38,6 +38,7 @@ export default abstract class MentomBase extends AbstractPaymentProvider<MentomO
   /*  Validation & Axios                         */
   /* ─────────────────────────────────────────── */
   static validateOptions(o: MentomOptions): void {
+    console.log("[MENTOM_PLUGIN] MentomBase.validateOptions called with:", o);
     if (!isDefined(o.apiKey)) throw new Error("Mentom provider: apiKey missing")
     if (!isDefined(o.terminalId)) throw new Error("Mentom provider: terminalId missing")
   }
@@ -45,6 +46,14 @@ export default abstract class MentomBase extends AbstractPaymentProvider<MentomO
   constructor(container: Record<string, unknown>, options: MentomOptions) {
     // @ts-ignore  Medusa DI signature
     super(...arguments)
+    console.log("[MENTOM_PLUGIN] MentomBase constructor. Initializing with options:", options);
+    try {
+      MentomBase.validateOptions(options);
+      console.log("[MENTOM_PLUGIN] MentomBase options validated successfully.");
+    } catch (e) {
+      console.error("[MENTOM_PLUGIN] MentomBase options validation failed:", e.message, e.stack);
+      throw e; // Re-throw to ensure Medusa handles the plugin load failure
+    }
 
     this.options_ = options
     this.client_ = axios.create({

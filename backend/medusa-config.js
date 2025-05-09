@@ -28,6 +28,13 @@ loadEnv(process.env.NODE_ENV, process.cwd())
 const paymentProviders = []
 
 if (MENTOM_API_KEY && MENTOM_TERMINAL_ID) {
+  console.log("[MEDUSA_CONFIG] Attempting to register Mentom payment provider with options:", {
+    apiKey: MENTOM_API_KEY ? 'SET' : 'NOT SET',
+    terminalId: MENTOM_TERMINAL_ID,
+    webhookSecret: MENTOM_WEBHOOK_SECRET ? 'SET' : 'NOT SET',
+    capture: MENTOM_CAPTURE === 'true',
+    baseUrl: MENTOM_BASE_URL || undefined,
+  });
   paymentProviders.push({
     resolve: "./src/modules/providers/payment-mentom", // keep/stub this file
     id     : "mentom",
@@ -39,6 +46,8 @@ if (MENTOM_API_KEY && MENTOM_TERMINAL_ID) {
       baseUrl      : MENTOM_BASE_URL || undefined,
     },
   })
+} else {
+  console.log("[MEDUSA_CONFIG] Mentom provider NOT registered due to missing MENTOM_API_KEY or MENTOM_TERMINAL_ID.");
 }
 
 /* ─────────────────────────────────────────────────────── */

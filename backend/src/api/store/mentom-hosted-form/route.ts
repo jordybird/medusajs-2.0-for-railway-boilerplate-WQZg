@@ -1,6 +1,8 @@
 import axios from "axios";
+console.log("[MENTOM_ROUTE] /api/store/mentom-hosted-form/route.ts file loaded by Medusa.");
 
 export async function POST(req, res) {
+  console.log("[MENTOM_ROUTE] POST /api/store/mentom-hosted-form handler called.");
   try {
     // Get Mentom options from Medusa configuration
     const mentomOptions = req.scope.resolve("mentomOptions");
